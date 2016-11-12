@@ -38,6 +38,9 @@
 .line .cell.active:after {
 	background: #474747;
 }
+.line .cell.punk:after {
+	background: #c33;
+}
 .line:nth-child(even) {
 	padding-left: 20px;
 }

@@ -44,6 +44,9 @@ $gap: $cell / 2;
     &.active:after {
       background: $colorBlack;
     }
+    &.punk:after {
+      background: #c33;
+    }
   }
   &:nth-child(even) {
     padding-left: $gap;
