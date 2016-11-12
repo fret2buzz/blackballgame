@@ -39,7 +39,7 @@
 	background: #474747;
 }
 .line .cell.punk:after {
-	background: #c33;
+	border: 3px solid #c33;
 }
 .line:nth-child(even) {
 	padding-left: 20px;

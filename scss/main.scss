@@ -45,7 +45,7 @@ $gap: $cell / 2;
       background: $colorBlack;
     }
     &.punk:after {
-      background: #c33;
+      border: 3px solid #c33;
     }
   }
   &:nth-child(even) {
