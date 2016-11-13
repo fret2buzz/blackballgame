@@ -1,3 +1,5 @@
+
+
 function myClass(id, buttons) {
   this.container = document.getElementById(id);
   this.containerPositionLeft = 0;
@@ -26,10 +28,13 @@ function myClass(id, buttons) {
 
   this.transitionFlag = 0;
   this.resetButton = document.querySelectorAll('#' + buttons +' .reset')[0];
+  this.possibleMovesButton = document.querySelectorAll('#' + buttons +' .possible-moves')[0];
   this.end = 0;
   this.stop = 0;
   this.row = 11;
   this.pos = 60;
+  this.prev = this.pos;
+  this.newArray = [];
 }
 
 myClass.prototype.initialize = function() {
@@ -55,6 +60,8 @@ myClass.prototype.initialize = function() {
   }
   this.randomActive();
   this.resetButton.addEventListener('click', this.reset.bind(this), false);
+  this.possibleMovesButton.addEventListener('click', this.possibleMoves.bind(this), false);
+  this.ball.setAttribute("data-pos", this.pos);
 }
 
 myClass.prototype.reset = function() {
@@ -69,6 +76,7 @@ myClass.prototype.reset = function() {
   this.ball.className = "ball";
   this.ball.style.left = this.initialX + "px";
   this.ball.style.top = this.initialY + "px";
+  this.ball.setAttribute("data-pos", this.pos);
 }
 
 myClass.prototype.randomActive = function() {
@@ -81,177 +89,222 @@ myClass.prototype.randomActive = function() {
   }
 }
 
-myClass.prototype.loseFunc = function(dir) {
+myClass.prototype.getPos = function() {
+  this.ballLeft = getCssProperty(this.ball, "left");
+  this.ballTop = getCssProperty(this.ball, "top");
+  console.log(this.ballLeft, this.ballTop);
+}
+
+myClass.prototype.setPos = function(a) {
+  if(this.stop == 0) {
+    console.log(a);
+    this.containerPositionLeft = this.container.getBoundingClientRect().left;
+    this.containerPositionTop = this.container.getBoundingClientRect().top;
+    var cellPosition = this.items[a].getBoundingClientRect();
+    this.x = cellPosition.left - this.containerPositionLeft;
+    this.y = cellPosition.top - this.containerPositionTop;
+    this.ball.setAttribute("data-pos", a);
+  } else {
+    this.ball.setAttribute("data-pos", "");
+  }
+  
+  this.ball.style.left = this.x + "px";
+  this.ball.style.top = this.y + "px";
+}
+
+myClass.prototype.prevFunc = function(){
+  if(this.items[this.pos].className.indexOf("active") > 0){
+    this.pos = this.prev;
+    this.transitionFlag = 0;
+  }
+};
+
+myClass.prototype.loseFunc = function(a){
+  var loseFuncRight = ((a + 1) % this.row == 0);
+  var loseFuncLeft = (a % this.row == 0 || a == 0);
+  var loseFuncTop = (a / this.row < 1);
+  var loseFuncBottom = ((a + 1) / this.row > (this.row - 1));
+
   if(this.end == 1) {
     console.log("You lose");
     this.stop = 1;
 
     this.getPos();
+    console.log(a);
 
-    if(dir == "right"){
+    if(loseFuncRight){
       this.x = this.ballLeft + this.ballWidth;
     }
-    if(dir == "left"){
+    if(loseFuncLeft){
       this.x = this.ballLeft - this.ballWidth;
     }
-    if(dir == "top"){
+    if(loseFuncTop){
       this.y = this.ballTop - this.ballWidth;
     }
-    if(dir == "bottom"){
+    if(loseFuncBottom){
       this.y = this.ballTop + this.ballWidth;
     }
-
     this.ball.className = this.ball.className + " hidden";
 
   } else {
-    if(dir == "right"){
-      if((this.pos + 1) % this.row == 0){
+    // getting the last row or col. this is the end
+    // if(dir == "right"){
+      if(loseFuncRight){
         console.log("hor last");
         this.end = 1;
       };
-    }
-    if(dir == "left"){
-      if((this.pos) % this.row == 0 || this.pos == 0){
+    // }
+    // if(dir == "left"){
+      if(loseFuncLeft){
         console.log("hor first");
         this.end = 1;
       };
-    }
-    if(dir == "top"){
-      if((this.pos) / this.row < 1){
+    // }
+    // if(dir.indexOf("top") > 0){
+      if(loseFuncTop){
         console.log("vert first");
         this.end = 1;
       };
-    }
-    if(dir == "bottom"){
-      if((this.pos + 1) / this.row > (this.row - 1)){
+    // }
+    // if(dir.indexOf("bottom") > 0){
+      if(loseFuncBottom){
         console.log("vert last");
         this.end = 1;
       };
-    }
+    // }
   }
 }
 
-myClass.prototype.getPos = function() {
-  this.ballLeft = getCssProperty(this.ball, "left");
-  this.ballTop = getCssProperty(this.ball, "top");
-}
-
-myClass.prototype.setPos = function() {
-  if(this.stop == 0) {
-    this.containerPositionLeft = this.container.getBoundingClientRect().left;
-    this.containerPositionTop = this.container.getBoundingClientRect().top;
-    var cellPosition = this.items[this.pos].getBoundingClientRect();
-    this.x = cellPosition.left - this.containerPositionLeft;
-    this.y = cellPosition.top - this.containerPositionTop;
-  }
-  
-  // console.log(" x: ", x, " y: ", y);
-  this.ball.style.left = this.x + "px";
-  this.ball.style.top = this.y + "px";
-}
 
 myClass.prototype.getNextIndex = function(dir){
   if(this.end == 0) {
+
     var parentIndex = parseInt(this.items[this.pos].parentNode.getAttribute("data-index"));
+    console.log("------------------------------------");
     console.log("parentIndex", parentIndex);
 
     if(dir == "left"){
+      this.prev = this.pos;
       this.pos = this.pos - 1;
+      this.prevFunc();
     }
     if(dir == "right"){
+      this.prev = this.pos;
       this.pos = this.pos + 1;
+      this.prevFunc();
     }
     if(dir == "left top"){
+      this.prev = this.pos;
       if(parentIndex % 2 == 0){
         this.pos = this.pos - this.row - 1;
       } else {
         this.pos = this.pos - this.row;
       }
+      this.prevFunc();
     }
     if(dir == "right top"){
+      this.prev = this.pos;
       if(parentIndex % 2 == 0){
         this.pos = this.pos - this.row;
       } else {
         this.pos = this.pos - this.row + 1;
       }
+      this.prevFunc();
     }
     if(dir == "left bottom"){
+      this.prev = this.pos;
       if(parentIndex % 2 == 0){
         this.pos = this.pos + this.row - 1;
       } else {
         this.pos = this.pos + this.row;
       }
+      this.prevFunc();
     }
     if(dir == "right bottom"){
+      this.prev = this.pos;
       if(parentIndex % 2 == 0){
         this.pos = this.pos + this.row;
       } else {
         this.pos = this.pos + this.row + 1;
       }
+      this.prevFunc();
     }
     console.log("this.pos", this.pos);
+
   }
 };
 
-myClass.prototype.moveRight = function() {
-  this.getNextIndex("right");
-  this.loseFunc("right");
-  this.setPos();
-  // console.log("right");
+myClass.prototype.move = function(a) {
+  this.loseFunc(a);
+  this.setPos(a);
+  // console.log(a);
 }
 
-myClass.prototype.moveLeft = function(){
-  this.getNextIndex("left");
-  this.loseFunc("left");
-  this.setPos();
-  // console.log("left");
-};
-
-myClass.prototype.moveRightTop = function(){
-  this.getNextIndex("right top");
-  this.loseFunc("top");
-  this.setPos();
-  // console.log("right top");
-};
-
-myClass.prototype.moveLeftBottom = function(){
-  this.getNextIndex("left bottom");
-  this.loseFunc("bottom");
-  this.setPos();
-  // console.log("left bottom");
-};
-
-myClass.prototype.moveRightBottom = function(){
-  this.getNextIndex("right bottom");
-  this.loseFunc("bottom");
-  this.setPos();
-  // console.log("right bottom");
-};
-
-myClass.prototype.moveLeftTop = function(){
-  this.getNextIndex("left top");
-  this.loseFunc("top");
-  this.setPos();
-  // console.log("left top");
-};
-
 myClass.prototype.moveFunc = function(e) {
+   
   if(this.transitionFlag == 0 && this.stop == 0) {
-
+    
+    this.pos = parseInt(this.ball.getAttribute("data-pos"));
     var curCell = e.currentTarget;
     var index = parseInt(curCell.getAttribute("data-index"));
     // console.log("index: ", index);
     if(curCell.className.indexOf("active") == -1){
       curCell.className = curCell.className + " active";
       this.transitionFlag = 1;
-      
-      this.moveRight();
-      // this.moveLeft();
-      // this.moveRightTop();
-      // this.moveLeftBottom();
-      // this.moveRightBottom();
-      // this.moveLeftTop();
+
+      this.possibleMoves();
+
+      this.move(this.newArray[0]);
+
     };
+  };
+}
+
+
+
+myClass.prototype.check = function(a){
+  this.pos = parseInt(this.ball.getAttribute("data-pos"));
+  this.getNextIndex(a);
+  
+  if(this.pos != this.prev){
+    this.items[this.pos].className = this.items[this.pos].className + " punk";
+    this.newArray.push(this.pos);
+  }
+};
+
+myClass.prototype.possibleMoves = function(e) {
+  console.log(this.pos);
+  for(var i = 0; i < this.itemsLength; i++) {
+    this.items[i].className = this.items[i].className.replace(" punk", "");
+  }
+  
+  if(this.end == 0) {
+    this.newArray = [];
+    for(var i = 1; i < 7; i++){
+      switch(i){
+        case 1:
+          this.check("left");
+          break;
+        case 2:
+          this.check("right");
+          break;
+        case 3:
+          this.check("left top");
+          break;
+        case 4:
+          this.check("right top");
+          break;
+        case 5:
+          this.check("left bottom");
+          break;
+        case 6:
+          this.check("right bottom");
+          break;
+        default:
+          console.log("You won");
+      }
+    }
+    console.log(this.newArray);
   };
 }
 
