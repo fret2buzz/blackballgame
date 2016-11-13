@@ -1,20 +1,29 @@
 function myClass(id, buttons) {
   this.container = document.getElementById(id);
+  this.containerPositionLeft = 0;
+  this.containerPositionTop = 0;
+  
   this.ball = document.querySelectorAll('#' + id +' .ball')[0];
+  
   this.containerWidth = this.container.offsetWidth;
   this.containerHeight = this.container.offsetHeight;
+  
   this.ballLeft = 0;
   this.ballTop = 0;
+  this.x = 0;
+  this.y = 0;
 
   this.ballWidth = this.ball.offsetWidth;
-  this.move = 0;
   
   this.initialX = getCssProperty(this.ball, "left");
   this.initialY = getCssProperty(this.ball, "top");
 
-  this.moveTop = getCssProperty(this.ball, "top");
   this.items = this.container.getElementsByClassName("cell");
   this.itemsLength = this.items.length;
+
+  this.lines = this.container.getElementsByClassName("line");
+  this.linesLength = this.lines.length;
+
   this.transitionFlag = 0;
   this.resetButton = document.querySelectorAll('#' + buttons +' .reset')[0];
   this.end = 0;
@@ -41,7 +50,10 @@ myClass.prototype.initialize = function() {
     this.items[i].setAttribute('data-index', i);
     this.items[i].addEventListener('click', this.moveFunc.bind(this), false);
   }
-  // this.randomActive();
+  for(var k = 1; k < this.linesLength; k++) {
+    this.lines[k].setAttribute('data-index', k);
+  }
+  this.randomActive();
   this.resetButton.addEventListener('click', this.reset.bind(this), false);
 }
 
@@ -53,8 +65,7 @@ myClass.prototype.reset = function() {
   for(var i = 0; i < this.itemsLength; i++) {
     this.items[i].className = "cell";
   }
-  // this.randomActive();
-  // this.random = Math.floor((Math.random() * 6) + 1);
+  this.randomActive();
   this.ball.className = "ball";
   this.ball.style.left = this.initialX + "px";
   this.ball.style.top = this.initialY + "px";
@@ -74,31 +85,49 @@ myClass.prototype.loseFunc = function(dir) {
   if(this.end == 1) {
     console.log("You lose");
     this.stop = 1;
+
+    this.getPos();
+
+    if(dir == "right"){
+      this.x = this.ballLeft + this.ballWidth;
+    }
+    if(dir == "left"){
+      this.x = this.ballLeft - this.ballWidth;
+    }
+    if(dir == "top"){
+      this.y = this.ballTop - this.ballWidth;
+    }
+    if(dir == "bottom"){
+      this.y = this.ballTop + this.ballWidth;
+    }
+
     this.ball.className = this.ball.className + " hidden";
-  }
-  if(dir == "right"){
-    if((this.pos + 1) % this.row == 0){
-      console.log("hor last");
-      this.end = 1;
-    };
-  }
-  if(dir == "left"){
-    if((this.pos) % this.row == 0 || this.pos == 0){
-      console.log("hor first");
-      this.end = 1;
-    };
-  }
-  if(dir == "top"){
-    if((this.pos) / this.row < 1){
-      console.log("vert first");
-      this.end = 1;
-    };
-  }
-  if(dir == "bottom"){
-    if((this.pos + 1) / this.row > (this.row - 1)){
-      console.log("vert last");
-      this.end = 1;
-    };
+
+  } else {
+    if(dir == "right"){
+      if((this.pos + 1) % this.row == 0){
+        console.log("hor last");
+        this.end = 1;
+      };
+    }
+    if(dir == "left"){
+      if((this.pos) % this.row == 0 || this.pos == 0){
+        console.log("hor first");
+        this.end = 1;
+      };
+    }
+    if(dir == "top"){
+      if((this.pos) / this.row < 1){
+        console.log("vert first");
+        this.end = 1;
+      };
+    }
+    if(dir == "bottom"){
+      if((this.pos + 1) / this.row > (this.row - 1)){
+        console.log("vert last");
+        this.end = 1;
+      };
+    }
   }
 }
 
@@ -108,76 +137,102 @@ myClass.prototype.getPos = function() {
 }
 
 myClass.prototype.setPos = function() {
-  this.ball.style.left = this.move + "px";
-  this.ball.style.top = this.moveTop + "px";
+  if(this.stop == 0) {
+    this.containerPositionLeft = this.container.getBoundingClientRect().left;
+    this.containerPositionTop = this.container.getBoundingClientRect().top;
+    var cellPosition = this.items[this.pos].getBoundingClientRect();
+    this.x = cellPosition.left - this.containerPositionLeft;
+    this.y = cellPosition.top - this.containerPositionTop;
+  }
+  
+  // console.log(" x: ", x, " y: ", y);
+  this.ball.style.left = this.x + "px";
+  this.ball.style.top = this.y + "px";
 }
 
-myClass.prototype.getNextIndex = function(){
-  // console.log("x: ", this.move, " y: ", this.moveTop);
-  var x = 0;
-  var y = 0;
-  if(this.move % this.ballWidth != 0){
-    x = (this.move - this.ballWidth + (this.ballWidth / 2)) / this.ballWidth;
-  } else {
-    x = this.move / this.ballWidth;
+myClass.prototype.getNextIndex = function(dir){
+  if(this.end == 0) {
+    var parentIndex = parseInt(this.items[this.pos].parentNode.getAttribute("data-index"));
+    console.log("parentIndex", parentIndex);
+
+    if(dir == "left"){
+      this.pos = this.pos - 1;
+    }
+    if(dir == "right"){
+      this.pos = this.pos + 1;
+    }
+    if(dir == "left top"){
+      if(parentIndex % 2 == 0){
+        this.pos = this.pos - this.row - 1;
+      } else {
+        this.pos = this.pos - this.row;
+      }
+    }
+    if(dir == "right top"){
+      if(parentIndex % 2 == 0){
+        this.pos = this.pos - this.row;
+      } else {
+        this.pos = this.pos - this.row + 1;
+      }
+    }
+    if(dir == "left bottom"){
+      if(parentIndex % 2 == 0){
+        this.pos = this.pos + this.row - 1;
+      } else {
+        this.pos = this.pos + this.row;
+      }
+    }
+    if(dir == "right bottom"){
+      if(parentIndex % 2 == 0){
+        this.pos = this.pos + this.row;
+      } else {
+        this.pos = this.pos + this.row + 1;
+      }
+    }
+    console.log("this.pos", this.pos);
   }
-  y = this.moveTop / this.ballWidth;
-  // console.log(x);
-  // console.log(y);
-  this.pos = (y * this.row) + x;
-  console.log("this.pos", this.pos);
-  // this.items[this.pos].className = this.items[this.pos].className + " punk";
-
-  this.setPos();
-
 };
 
 myClass.prototype.moveRight = function() {
-  this.move = this.ballLeft + this.ballWidth;
-  this.moveTop = this.ballTop;
-  this.getNextIndex();
+  this.getNextIndex("right");
   this.loseFunc("right");
-  console.log("right");
+  this.setPos();
+  // console.log("right");
 }
 
 myClass.prototype.moveLeft = function(){
-  this.move = this.ballLeft - this.ballWidth;
-  this.moveTop = this.ballTop;
-  this.getNextIndex();
+  this.getNextIndex("left");
   this.loseFunc("left");
-  console.log("left");
+  this.setPos();
+  // console.log("left");
 };
 
 myClass.prototype.moveRightTop = function(){
-  this.move = this.ballLeft + (this.ballWidth / 2);
-  this.moveTop = this.ballTop - this.ballWidth;
-  this.getNextIndex();
+  this.getNextIndex("right top");
   this.loseFunc("top");
-  console.log("right top");
+  this.setPos();
+  // console.log("right top");
 };
 
 myClass.prototype.moveLeftBottom = function(){
-  this.move = this.ballLeft - (this.ballWidth / 2);
-  this.moveTop = this.ballTop + this.ballWidth;
-  this.getNextIndex();
+  this.getNextIndex("left bottom");
   this.loseFunc("bottom");
-  console.log("left bottom");
+  this.setPos();
+  // console.log("left bottom");
 };
 
 myClass.prototype.moveRightBottom = function(){
-  this.move = this.ballLeft + (this.ballWidth / 2);
-  this.moveTop = this.ballTop + this.ballWidth;
-  this.getNextIndex();
+  this.getNextIndex("right bottom");
   this.loseFunc("bottom");
-  console.log("right bottom");
+  this.setPos();
+  // console.log("right bottom");
 };
 
 myClass.prototype.moveLeftTop = function(){
-  this.move = this.ballLeft - (this.ballWidth / 2);
-  this.moveTop = this.ballTop - this.ballWidth;
-  this.getNextIndex();
+  this.getNextIndex("left top");
   this.loseFunc("top");
-  console.log("left top");
+  this.setPos();
+  // console.log("left top");
 };
 
 myClass.prototype.moveFunc = function(e) {
@@ -185,17 +240,17 @@ myClass.prototype.moveFunc = function(e) {
 
     var curCell = e.currentTarget;
     var index = parseInt(curCell.getAttribute("data-index"));
-    console.log("index: ", index);
+    // console.log("index: ", index);
     if(curCell.className.indexOf("active") == -1){
       curCell.className = curCell.className + " active";
       this.transitionFlag = 1;
-      this.getPos();
-      // this.moveRight();
+      
+      this.moveRight();
       // this.moveLeft();
       // this.moveRightTop();
       // this.moveLeftBottom();
       // this.moveRightBottom();
-      this.moveLeftTop();
+      // this.moveLeftTop();
     };
   };
 }
