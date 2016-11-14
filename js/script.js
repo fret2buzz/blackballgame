@@ -1,38 +1,14 @@
 function myClass(id, buttons) {
   this.container = document.getElementById(id);
-  this.containerWidth = this.container.offsetWidth;
-  this.containerHeight = this.container.offsetHeight;
-  this.containerPositionLeft = 0;
-  this.containerPositionTop = 0;
-  
   this.ball = document.querySelectorAll('#' + id +' .ball')[0];
-  this.ballLeft = 0;
-  this.ballTop = 0;
-  this.x = 0;
-  this.y = 0;
-
   this.ballWidth = this.ball.offsetWidth;
-  
   this.initialX = getCssProperty(this.ball, "left");
   this.initialY = getCssProperty(this.ball, "top");
-
   this.items = this.container.getElementsByClassName("cell");
   this.itemsLength = this.items.length;
-
   this.lines = this.container.getElementsByClassName("line");
   this.linesLength = this.lines.length;
-
-  this.transitionFlag = 0;
   this.resetButton = document.querySelectorAll('#' + buttons +' .reset')[0];
-  this.possibleMovesButton = document.querySelectorAll('#' + buttons +' .possible-moves')[0];
-
-  this.end = 0;
-  this.stop = 0;
-  this.row = 11;
-  this.pos = 60;
-  this.map = [];
-  this.mapItem = {};
-  this.path = [];
 }
 
 
@@ -47,7 +23,6 @@ myClass.prototype.initialize = function() {
   });
 
   for(var i = 0; i < this.itemsLength; i++) {
-    this.items[i].setAttribute('data-index', i);
     this.items[i].addEventListener('click', this.moveFunc.bind(this), false);
   }
   for(var k = 0; k < this.linesLength; k++) {
@@ -55,16 +30,53 @@ myClass.prototype.initialize = function() {
   }
   this.randomActive();
   this.resetButton.addEventListener('click', this.reset.bind(this), false);
-  this.possibleMovesButton.addEventListener('click', this.possibleMoves.bind(this), false);
   this.ball.setAttribute("data-pos", this.pos);
+  this.reset();
+}
 
+myClass.prototype.findEndPoints = function() {
+  for(v = 1; v < (this.row - 1); v++){
+    // console.log("v", v);
+    this.endPoints.push(v);
+  }
+  for(b = (((this.row - 1)*this.row) + 1); b < ((this.row*this.row) - 1); b++){
+    // console.log("b", b);
+    this.endPoints.push(b);
+  }
+  for(a = 0; a <= (this.row * (this.row - 1)); a = a + this.row){
+    // console.log("a", a);
+    this.endPoints.push(a);
+  }
+  for(x = (this.row - 1); x <= ((this.row*this.row) - 1); x = x + this.row){
+    // console.log("x", x);
+    this.endPoints.push(x);
+  }
 }
 
 myClass.prototype.reset = function() {
-  this.pos = 60;
-  this.stop = 0;
+  this.containerWidth = this.container.offsetWidth;
+  this.containerHeight = this.container.offsetHeight;
+  this.containerPositionLeft = 0;
+  this.containerPositionTop = 0;
   this.end = 0;
+  this.stop = 0;
+  this.row = 11;
+  this.pos = 60;
+  this.map = [];
+  this.mapItem = {};
+  this.path = [];
+  this.movePoint = 0;
+  this.endPoints = [];
+  this.filtered = [];
+  this.min = 1000;
   this.transitionFlag = 0;
+  this.ballLeft = 0;
+  this.ballTop = 0;
+  this.x = 0;
+  this.y = 0;
+  this.bestPath;
+  this.nullCounter;
+
   for(var i = 0; i < this.itemsLength; i++) {
     this.items[i].className = "cell";
   }
@@ -73,6 +85,7 @@ myClass.prototype.reset = function() {
   this.ball.style.left = this.initialX + "px";
   this.ball.style.top = this.initialY + "px";
   this.ball.setAttribute("data-pos", this.pos);
+  this.findEndPoints();
 }
 
 myClass.prototype.randomActive = function() {
@@ -109,7 +122,8 @@ myClass.prototype.setPos = function(a) {
 }
 
 myClass.prototype.loseFunc = function(a){
-  console.log(a);
+  var self = this;
+  // console.log(a);
   var loseFuncRight = ((a + 1) % this.row == 0);
   var loseFuncLeft = (a % this.row == 0 || a == 0);
   var loseFuncTop = (a / this.row < 1);
@@ -133,62 +147,69 @@ myClass.prototype.loseFunc = function(a){
     if(loseFuncBottom){
       this.y = this.ballTop + this.ballWidth;
     }
-    
+
     this.ball.className = this.ball.className + " hidden";
+
+    setTimeout(function(){ self.reset(); }, 2000);
 
   } else {
     // getting the last row or col. it will be the end
-    if(loseFuncRight){
-      console.log("hor last");
-      this.end = 1;
-    };
-    if(loseFuncLeft){
-      console.log("hor first");
-      this.end = 1;
-    };
-    if(loseFuncTop){
-      console.log("vert first");
-      this.end = 1;
-    };
-    if(loseFuncBottom){
-      console.log("vert last");
+    if(loseFuncRight || loseFuncLeft || loseFuncTop || loseFuncBottom){
       this.end = 1;
     };
   }
 }
 
 myClass.prototype.moveFunc = function(e) {
-   
+  var self = this;
   if(this.transitionFlag == 0 && this.stop == 0) {
-    
-    this.pos = parseInt(this.ball.getAttribute("data-pos"));
+
     var curCell = e.currentTarget;
-    // var index = parseInt(curCell.getAttribute("data-index"));
     if(curCell.className.indexOf("active") == -1){
       curCell.className = curCell.className + " active";
       this.transitionFlag = 1;
-
-      this.possibleMoves();
+      this.pos = parseInt(this.ball.getAttribute("data-pos"));
       if(this.end == 0){
-        this.path = graph.findShortestPath('cell-' + this.pos, 'cell-120');
-      }
+        this.min = 1000;
         
-      var movePoint = parseInt(this.path[1].split("-")[1]);
-      console.log(movePoint);
+        this.filtered = [];
+        this.nullCounter = 0;
+        this.filtered = this.endPoints.filter(function(p){
+          // console.log("self.items[p].className.indexOf", self.items[p].className.indexOf("active") == -1);
+          return self.items[p].className.indexOf("active") == -1;
+        });
 
-      console.log(this.path);
-      if(this.path.length == 0){
+        // console.log("this.filtered.length", this.filtered.length);
+        this.possibleMoves();
+        
+        for(t = 0; t < this.filtered.length; t++){
+          this.bestPath = graph.findShortestPath('cell-' + this.pos, 'cell-' + this.filtered[t]);
+           // console.log("this.bestPath", this.bestPath);
+          if(this.bestPath != null) {
+            if(this.bestPath.length < this.min){
+              this.min = this.bestPath.length;
+              this.path = this.bestPath;
+            }
+          } else {
+            this.nullCounter++;
+          }
+        }
+      }
+
+      if(this.nullCounter == this.filtered.length){
         console.log("You won");
         this.stop = 1;
+        setTimeout(function(){ self.reset(); }, 2000);
       }
 
-      this.loseFunc(movePoint);
-      this.setPos(movePoint);
+      this.movePoint = parseInt(this.path[1].split("-")[1]);
+      // console.log("this.movePoint-----", this.movePoint);
+      this.loseFunc(this.movePoint);
+      this.setPos(this.movePoint);
 
     };
   };
 }
-
 
 myClass.prototype.possibleMoves = function() {
   if(this.end == 0){
