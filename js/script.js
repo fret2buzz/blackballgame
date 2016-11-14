@@ -35,6 +35,15 @@ function myClass(id, buttons) {
   this.pos = 60;
   this.prev = this.pos;
   this.newArray = [];
+  this.dY1 = [16,27,38,49];
+  this.dY2 = [71,82,93,104];
+  this.dX1 = [56,57,58,59];
+  this.dX2 = [61,62,63,64];
+  this.d1 = [12,13,14,15,23,24,25,26,34,35,36,37,45,46,47,48];
+  this.d2 = [17,18,19,20,28,29,30,31,39,40,41,42,50,51,52,53];
+  this.d3 = [67,68,69,70,78,79,80,81,89,90,91,92,100,101,102,103];
+  this.d4 = [72,73,74,75,83,84,85,86,94,95,96,97,105,106,107,108];
+  this.sector = '';
 }
 
 myClass.prototype.initialize = function() {
@@ -130,7 +139,6 @@ myClass.prototype.loseFunc = function(a){
     this.stop = 1;
 
     this.getPos();
-    console.log(a);
 
     if(loseFuncRight){
       this.x = this.ballLeft + this.ballWidth;
@@ -229,7 +237,7 @@ myClass.prototype.getNextIndex = function(dir){
       }
       this.prevFunc();
     }
-    console.log("this.pos", this.pos);
+    // console.log("this.pos", this.pos);
 
   }
 };
@@ -246,36 +254,92 @@ myClass.prototype.moveFunc = function(e) {
     
     this.pos = parseInt(this.ball.getAttribute("data-pos"));
     var curCell = e.currentTarget;
-    var index = parseInt(curCell.getAttribute("data-index"));
+    // var index = parseInt(curCell.getAttribute("data-index"));
     // console.log("index: ", index);
     if(curCell.className.indexOf("active") == -1){
       curCell.className = curCell.className + " active";
       this.transitionFlag = 1;
+      
+      for(var q = 0; q < 4; q++){
+        if(this.pos == this.dY1[q]) {
+          this.sector = "dY1";
+          break;
+        }
+      }
+
+      for(var w = 0; w < 4; w++){
+        if(this.pos == this.dY2[w]) {
+          this.sector = "dY2";
+          break;
+        }
+      }
+
+      for(var e = 0; e < 4; e++){
+        if(this.pos == this.dX1[e]) {
+          this.sector = "dX1";
+          break;
+        }
+      }
+
+      for(var r = 0; r < 4; r++){
+        if(this.pos == this.dX2[r]) {
+          this.sector = "dX2";
+          break;
+        }
+      }
+
+      for(var a = 0; a < 16; a++){
+        if(this.pos == this.d1[a]) {
+          this.sector = "d1";
+          break;
+        }
+      }
+
+      for(var s = 0; s < 16; s++){
+        if(this.pos == this.d2[s]) {
+          this.sector = "d2";
+          break;
+        }
+      }
+
+      for(var d = 0; d < 16; d++){
+        if(this.pos == this.d3[d]) {
+          this.sector = "d3";
+          break;
+        }
+      }
+
+      for(var f = 0; f < 16; f++){
+        if(this.pos == this.d4[f]) {
+          this.sector = "d4";
+          break;
+        }
+      }
+
+      console.log(this.sector);
 
       this.possibleMoves();
-
-      this.move(this.newArray[0]);
+      console.log("this.prev: ", this.prev);
+      this.move(this.newArray[Math.floor(Math.random() * this.newArray.length)]);
 
     };
   };
 }
-
-
 
 myClass.prototype.check = function(a){
   this.pos = parseInt(this.ball.getAttribute("data-pos"));
   this.getNextIndex(a);
   
   if(this.pos != this.prev){
-    this.items[this.pos].className = this.items[this.pos].className + " punk";
+    // this.items[this.pos].className = this.items[this.pos].className + " punk";
     this.newArray.push(this.pos);
   }
 };
 
 myClass.prototype.possibleMoves = function(e) {
-  console.log(this.pos);
+  // console.log(this.pos);
   for(var i = 0; i < this.itemsLength; i++) {
-    this.items[i].className = this.items[i].className.replace(" punk", "");
+    // this.items[i].className = this.items[i].className.replace(" punk", "");
   }
   
   if(this.end == 0) {
@@ -300,11 +364,9 @@ myClass.prototype.possibleMoves = function(e) {
         case 6:
           this.check("right bottom");
           break;
-        default:
-          console.log("You won");
       }
     }
-    console.log(this.newArray);
+    
   };
 }
 
