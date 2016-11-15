@@ -9,12 +9,15 @@ function myClass(id, buttons) {
   this.lines = this.container.getElementsByClassName("line");
   this.linesLength = this.lines.length;
   this.resetButton = document.querySelectorAll('#' + buttons +' .reset')[0];
+  this.scoreYou = document.getElementById("scoreYou");
+  this.scoreDot = document.getElementById("scoreDot");
+  this.scoreYouData = 0;
+  this.scoreDotData = 0;
 }
-
 
 myClass.prototype.initialize = function() {
   var self = this;
-
+  this.reset();
   // Listen for a transition
   var transitionEvent = whichTransitionEvent();
   transitionEvent && ball.addEventListener(transitionEvent, function() {
@@ -28,29 +31,8 @@ myClass.prototype.initialize = function() {
   for(var k = 0; k < this.linesLength; k++) {
     this.lines[k].setAttribute('data-index', k);
   }
-  this.randomActive();
+  
   this.resetButton.addEventListener('click', this.reset.bind(this), false);
-  this.ball.setAttribute("data-pos", this.pos);
-  this.reset();
-}
-
-myClass.prototype.findEndPoints = function() {
-  for(v = 1; v < (this.row - 1); v++){
-    // console.log("v", v);
-    this.endPoints.push(v);
-  }
-  for(b = (((this.row - 1)*this.row) + 1); b < ((this.row*this.row) - 1); b++){
-    // console.log("b", b);
-    this.endPoints.push(b);
-  }
-  for(a = 0; a <= (this.row * (this.row - 1)); a = a + this.row){
-    // console.log("a", a);
-    this.endPoints.push(a);
-  }
-  for(x = (this.row - 1); x <= ((this.row*this.row) - 1); x = x + this.row){
-    // console.log("x", x);
-    this.endPoints.push(x);
-  }
 }
 
 myClass.prototype.reset = function() {
@@ -81,11 +63,31 @@ myClass.prototype.reset = function() {
     this.items[i].className = "cell";
   }
   this.randomActive();
+
   this.ball.className = "ball";
   this.ball.style.left = this.initialX + "px";
   this.ball.style.top = this.initialY + "px";
   this.ball.setAttribute("data-pos", this.pos);
   this.findEndPoints();
+}
+
+myClass.prototype.findEndPoints = function() {
+  for(v = 1; v < (this.row - 1); v++){
+    // console.log("v", v);
+    this.endPoints.push(v);
+  }
+  for(b = (((this.row - 1)*this.row) + 1); b < ((this.row*this.row) - 1); b++){
+    // console.log("b", b);
+    this.endPoints.push(b);
+  }
+  for(a = 0; a <= (this.row * (this.row - 1)); a = a + this.row){
+    // console.log("a", a);
+    this.endPoints.push(a);
+  }
+  for(x = (this.row - 1); x <= ((this.row*this.row) - 1); x = x + this.row){
+    // console.log("x", x);
+    this.endPoints.push(x);
+  }
 }
 
 myClass.prototype.randomActive = function() {
@@ -101,7 +103,6 @@ myClass.prototype.randomActive = function() {
 myClass.prototype.getPos = function() {
   this.ballLeft = getCssProperty(this.ball, "left");
   this.ballTop = getCssProperty(this.ball, "top");
-
 }
 
 myClass.prototype.setPos = function(a) {
@@ -131,6 +132,8 @@ myClass.prototype.loseFunc = function(a){
 
   if(this.end == 1) {
     console.log("You lose");
+    this.scoreDotData++;
+    this.scoreDot.innerHTML = this.scoreDotData;
     this.stop = 1;
 
     this.getPos();
@@ -150,7 +153,7 @@ myClass.prototype.loseFunc = function(a){
 
     this.ball.className = this.ball.className + " hidden";
 
-    setTimeout(function(){ self.reset(); }, 2000);
+    // setTimeout(function(){ self.reset(); }, 2000);
 
   } else {
     // getting the last row or col. it will be the end
@@ -175,11 +178,9 @@ myClass.prototype.moveFunc = function(e) {
         this.filtered = [];
         this.nullCounter = 0;
         this.filtered = this.endPoints.filter(function(p){
-          // console.log("self.items[p].className.indexOf", self.items[p].className.indexOf("active") == -1);
           return self.items[p].className.indexOf("active") == -1;
         });
 
-        // console.log("this.filtered.length", this.filtered.length);
         this.possibleMoves();
         
         for(t = 0; t < this.filtered.length; t++){
@@ -198,12 +199,14 @@ myClass.prototype.moveFunc = function(e) {
 
       if(this.nullCounter == this.filtered.length){
         console.log("You won");
+        this.scoreYouData++;
+        this.scoreYou.innerHTML = this.scoreYouData;
         this.stop = 1;
-        setTimeout(function(){ self.reset(); }, 2000);
+        // setTimeout(function(){ self.reset(); }, 2000);
       }
 
       this.movePoint = parseInt(this.path[1].split("-")[1]);
-      // console.log("this.movePoint-----", this.movePoint);
+
       this.loseFunc(this.movePoint);
       this.setPos(this.movePoint);
 
@@ -219,9 +222,13 @@ myClass.prototype.possibleMoves = function() {
       var parentIndex = parseInt(this.items[i].parentNode.getAttribute("data-index"));
       for(z = 1; z < 7; z++){
         // left
-        if(z == 1){position = i - 1;}
+        if(z == 1){
+          position = i - 1;
+        }
         // right
-        if(z == 2){position = i + 1;}
+        if(z == 2){
+          position = i + 1;
+        }
         // left top
         if(z == 3){
           if(parentIndex % 2 == 0){
@@ -257,16 +264,12 @@ myClass.prototype.possibleMoves = function() {
 
         if(this.items[position] != undefined){
           if(this.items[position].className.indexOf("active") == -1){
-            // this.items[position].className = this.items[position].className + " punk";
             this.mapItem["cell-"+position] = 1;
           }
         }
       }
       this.map["cell-"+i] = this.mapItem;
     }
-    
-    
-    // console.log(this.map);
 
     graph = new Graph(this.map);
   }

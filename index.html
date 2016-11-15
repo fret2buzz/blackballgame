@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <title>Black ball</title>
   <link rel="stylesheet" href="css/main.css" />
+  <link href="https://fonts.googleapis.com/css?family=Gloria+Hallelujah" rel="stylesheet">
   <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
 </head>
 <body>
 
-
-<div id="buttons">
-    <button class="reset" type="button">Reset</button>
+<div class="header">
+    <h1>Black Ball</h1>
 </div>
 <div id="container" class="container">
   <div class="line line01">
@@ -157,6 +157,15 @@
     <div class="cell"></div>
   </div>
   <div id="ball" class="ball">&nbsp;</div>
+  <div class="footer">
+    <div class="col-left" id="buttons">
+        <button class="reset" type="button">Reset</button>
+    </div>
+    <div class="col-right">
+        You: <span id="scoreYou">0</span><br />
+        Red dot: <span id="scoreDot">0</span>
+    </div>
+  </div>
   <script type="text/javascript" src="js/graph.js"></script>
   <script type="text/javascript" src="js/script.js"></script>
 </div>
