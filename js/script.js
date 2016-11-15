@@ -33,7 +33,13 @@ myClass.prototype.initialize = function() {
   }
   
   this.resetButton.addEventListener('click', this.reset.bind(this), false);
+  this.resetButton.addEventListener('click', this.count.bind(this), false);
 
+}
+
+myClass.prototype.count = function() {
+  this.scoreDotData++;
+  this.scoreDot.innerHTML = this.scoreDotData;
 }
 
 myClass.prototype.reset = function() {
@@ -70,9 +76,6 @@ myClass.prototype.reset = function() {
   this.ball.style.top = this.initialY + "px";
   this.ball.setAttribute("data-pos", this.pos);
   this.findEndPoints();
-  
-  this.scoreDot.innerHTML = this.scoreDotData;
-  this.scoreDotData++;
 }
 
 myClass.prototype.findEndPoints = function() {
@@ -136,8 +139,7 @@ myClass.prototype.loseFunc = function(a){
 
   if(this.end == 1) {
     console.log("You lose");
-    this.scoreDotData++;
-    this.scoreDot.innerHTML = this.scoreDotData;
+    this.count();
     this.stop = 1;
 
     this.getPos();
