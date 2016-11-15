@@ -55,7 +55,7 @@ input::-moz-focus-inner {
   float: left;
   width: 49%;
   text-align: right;
-  font-size: 28px;
+  font-size: 24px;
   font-family: 'Gloria Hallelujah', cursive;
   font-weight: 400;
   line-height: 1;
@@ -133,7 +133,7 @@ input::-moz-focus-inner {
   top: ($cell * 5);
   width: $cell;
   height: $cell;
-  transition: all 0.4s;
+  transition: all 0.2s;
   // border: 1px solid #c33;
   opacity: 1;
   &.hidden {

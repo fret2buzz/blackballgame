@@ -33,6 +33,7 @@ myClass.prototype.initialize = function() {
   }
   
   this.resetButton.addEventListener('click', this.reset.bind(this), false);
+
 }
 
 myClass.prototype.reset = function() {
@@ -69,6 +70,9 @@ myClass.prototype.reset = function() {
   this.ball.style.top = this.initialY + "px";
   this.ball.setAttribute("data-pos", this.pos);
   this.findEndPoints();
+  
+  this.scoreDot.innerHTML = this.scoreDotData;
+  this.scoreDotData++;
 }
 
 myClass.prototype.findEndPoints = function() {
@@ -153,7 +157,7 @@ myClass.prototype.loseFunc = function(a){
 
     this.ball.className = this.ball.className + " hidden";
 
-    // setTimeout(function(){ self.reset(); }, 2000);
+    setTimeout(function(){ self.reset(); }, 2000);
 
   } else {
     // getting the last row or col. it will be the end
@@ -202,7 +206,7 @@ myClass.prototype.moveFunc = function(e) {
         this.scoreYouData++;
         this.scoreYou.innerHTML = this.scoreYouData;
         this.stop = 1;
-        // setTimeout(function(){ self.reset(); }, 2000);
+        setTimeout(function(){ self.reset(); }, 2000);
       }
 
       this.movePoint = parseInt(this.path[1].split("-")[1]);
