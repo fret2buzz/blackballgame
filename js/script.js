@@ -13,6 +13,8 @@ function myClass(id, buttons) {
   this.scoreDot = document.getElementById("scoreDot");
   this.scoreYouData = 0;
   this.scoreDotData = 0;
+  this.restarting = 1;
+  this.win;
 }
 
 myClass.prototype.initialize = function() {
@@ -33,49 +35,64 @@ myClass.prototype.initialize = function() {
   }
   
   this.resetButton.addEventListener('click', this.reset.bind(this), false);
-  this.resetButton.addEventListener('click', this.count.bind(this), false);
-
 }
 
-myClass.prototype.count = function() {
-  this.scoreDotData++;
-  this.scoreDot.innerHTML = this.scoreDotData;
+myClass.prototype.restart = function() {
+  var self = this;
+  this.restarting = 0;
+  setTimeout(function(){
+
+    self.restarting = 1;
+    self.reset();
+
+  }, 1500);
 }
 
 myClass.prototype.reset = function() {
-  this.containerWidth = this.container.offsetWidth;
-  this.containerHeight = this.container.offsetHeight;
-  this.containerPositionLeft = 0;
-  this.containerPositionTop = 0;
-  this.end = 0;
-  this.stop = 0;
-  this.row = 11;
-  this.pos = 60;
-  this.map = [];
-  this.mapItem = {};
-  this.path = [];
-  this.movePoint = 0;
-  this.endPoints = [];
-  this.filtered = [];
-  this.min = 1000;
-  this.transitionFlag = 0;
-  this.ballLeft = 0;
-  this.ballTop = 0;
-  this.x = 0;
-  this.y = 0;
-  this.bestPath;
-  this.nullCounter;
+  if(this.restarting == 1) {
+    if(this.win == 1) {
+      this.scoreYouData++;
+      this.scoreYou.innerHTML = this.scoreYouData;
+    }
+    if(this.win == 0) {
+      this.scoreDotData++;
+      this.scoreDot.innerHTML = this.scoreDotData;
+    }
+    this.containerWidth = this.container.offsetWidth;
+    this.containerHeight = this.container.offsetHeight;
+    this.containerPositionLeft = 0;
+    this.containerPositionTop = 0;
+    this.end = 0;
+    this.stop = 0;
+    this.row = 11;
+    this.pos = 60;
+    this.map = [];
+    this.mapItem = {};
+    this.path = null;
+    this.movePoint = 0;
+    this.endPoints = [];
+    this.filtered = [];
+    this.min = 1000;
+    this.transitionFlag = 0;
+    this.ballLeft = 0;
+    this.ballTop = 0;
+    this.x = 0;
+    this.y = 0;
+    this.bestPath;
+    this.nullCounter;
+    this.win = 0;
 
-  for(var i = 0; i < this.itemsLength; i++) {
-    this.items[i].className = "cell";
+    for(var i = 0; i < this.itemsLength; i++) {
+      this.items[i].className = "cell";
+    }
+    this.randomActive();
+
+    this.ball.className = "ball";
+    this.ball.style.left = this.initialX + "px";
+    this.ball.style.top = this.initialY + "px";
+    this.ball.setAttribute("data-pos", this.pos);
+    this.findEndPoints();
   }
-  this.randomActive();
-
-  this.ball.className = "ball";
-  this.ball.style.left = this.initialX + "px";
-  this.ball.style.top = this.initialY + "px";
-  this.ball.setAttribute("data-pos", this.pos);
-  this.findEndPoints();
 }
 
 myClass.prototype.findEndPoints = function() {
@@ -139,8 +156,9 @@ myClass.prototype.loseFunc = function(a){
 
   if(this.end == 1) {
     console.log("You lose");
-    this.count();
+    
     this.stop = 1;
+    this.win = 0;
 
     this.getPos();
 
@@ -159,7 +177,7 @@ myClass.prototype.loseFunc = function(a){
 
     this.ball.className = this.ball.className + " hidden";
 
-    setTimeout(function(){ self.reset(); }, 2000);
+    this.restart();
 
   } else {
     // getting the last row or col. it will be the end
@@ -205,17 +223,16 @@ myClass.prototype.moveFunc = function(e) {
 
       if(this.nullCounter == this.filtered.length){
         console.log("You won");
-        this.scoreYouData++;
-        this.scoreYou.innerHTML = this.scoreYouData;
         this.stop = 1;
-        setTimeout(function(){ self.reset(); }, 2000);
+        this.win = 1;
+        this.restart();
       }
 
-      this.movePoint = parseInt(this.path[1].split("-")[1]);
-
-      this.loseFunc(this.movePoint);
-      this.setPos(this.movePoint);
-
+      if(this.path != null){
+        this.movePoint = parseInt(this.path[1].split("-")[1]);
+        this.loseFunc(this.movePoint);
+        this.setPos(this.movePoint);
+      }
     };
   };
 }
