@@ -129,6 +129,7 @@ input::-moz-focus-inner {
 	height: 40px;
 	-webkit-transition: all 0.2s;
 	transition: all 0.2s;
+	z-index: 100;
 	opacity: 1;
 }
 .ball.hidden {
