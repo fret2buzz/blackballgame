@@ -66,6 +66,7 @@ myClass.prototype.reset = function() {
     this.stop = 0;
     this.row = 11;
     this.pos = 60;
+    this.graph = [];
     this.map = [];
     this.mapItem = {};
     this.path = null;
@@ -208,7 +209,7 @@ myClass.prototype.moveFunc = function(e) {
         this.possibleMoves();
         
         for(t = 0; t < this.filtered.length; t++){
-          this.bestPath = graph.findShortestPath('cell-' + this.pos, 'cell-' + this.filtered[t]);
+          this.bestPath = this.graph.findShortestPath('cell-' + this.pos, 'cell-' + this.filtered[t]);
            // console.log("this.bestPath", this.bestPath);
           if(this.bestPath != null) {
             if(this.bestPath.length < this.min){
@@ -294,7 +295,7 @@ myClass.prototype.possibleMoves = function() {
       this.map["cell-"+i] = this.mapItem;
     }
 
-    graph = new Graph(this.map);
+    this.graph = new Graph(this.map);
   }
 }
 
